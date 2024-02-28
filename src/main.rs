@@ -54,6 +54,7 @@ impl Commands {
 impl From<&Cli> for config::FilterOpts {
     fn from(value: &Cli) -> Self {
         Self {
+            debug_mode: value.debug_mode,
             include_files: !value.ignore_files,
             include_dirs: !value.ignore_dirs,
             symlinks: value.symlinks,
@@ -77,6 +78,13 @@ impl From<&Cli> for config::FilterOpts {
 struct Cli {
     #[command(subcommand)]
     command: Commands,
+
+    #[clap(
+        long="debug",
+        default_value = "false",
+        help = "Display debug messages"
+    )]
+    debug_mode: bool,
 
     #[clap(
         long,

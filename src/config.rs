@@ -15,6 +15,7 @@ pub enum SymlinkOption {
 /// Represents the glob filtering behavior specified by the user.
 #[derive(Clone, Copy, Debug)]
 pub struct FilterOpts {
+    pub debug_mode: bool,
     pub include_files: bool,
     pub include_dirs: bool,
     pub symlinks: SymlinkOption,
@@ -24,6 +25,7 @@ pub struct FilterOpts {
 impl Default for FilterOpts {
     fn default() -> Self {
         Self {
+            debug_mode: false,
             include_files: true,
             include_dirs: false,
             symlinks: SymlinkOption::Traverse,

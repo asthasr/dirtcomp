@@ -40,6 +40,10 @@ pub fn simple_check(filter_opts: FilterOpts, base: Pattern, target: Pattern) {
 
 /// Checks a slice of base globs against a slice of target globs.
 pub fn multi_check(filter_opts: FilterOpts, bases: &[Pattern], targets: &[Pattern]) {
+    if filter_opts.debug_mode {
+        dbg!(bases, targets);
+    }
+
     let Some((_, base_mtime)) = get_max_mtime(&filter_opts, bases) else {
         eprintln!("Nothing matched the base glob(s).");
         ReturnCodes::NoEntityError.exit()
