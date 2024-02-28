@@ -1,10 +1,11 @@
 [package]
 name = "dirtcomp"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "GPL-3.0-only"
 
 description = "A command line utility to compare modification times between file globs"
+repository = "https://github.com/asthasr/dirtcomp"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
