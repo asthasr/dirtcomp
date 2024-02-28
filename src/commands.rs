@@ -2,37 +2,53 @@ use std::process::exit;
 
 use glob::Pattern;
 
-use crate::{config::FilterOpts, file_handling::FileInfo, traversal::read_glob_entries};
+use crate::{config::FilterOpts, traversal::get_max_mtime};
 
-fn get_max_mtime<'a>(filter_opts: &'a FilterOpts, globs: Vec<Pattern>) -> Option<FileInfo<'a>> {
-    globs
-        .into_iter()
-        .flat_map(|g| read_glob_entries(filter_opts, g))
-        .filter(FileInfo::is_relevant)
-        .max_by_key(FileInfo::modified_time)
+/// Represents the OS status code that will be returned. See the `exit` method for numeric values.
+enum ReturnCodes {
+    ComparisonTrue,
+    ComparisonFalse,
+    NoEntityError,
 }
 
+impl ReturnCodes {
+    /// Exits with an appropriate status code for the command outcome.
+    fn exit(&self) -> ! {
+        match self {
+            Self::ComparisonTrue => exit(0),
+            Self::ComparisonFalse => exit(1),
+            Self::NoEntityError => exit(2),
+        }
+    }
+}
+
+/// Allows the construction of an appropriate return code based on a single comparison.
+impl From<bool> for ReturnCodes {
+    fn from(value: bool) -> Self {
+        if value {
+            Self::ComparisonTrue
+        } else {
+            Self::ComparisonFalse
+        }
+    }
+}
+
+/// Checks one base glob against one target glob.
 pub fn simple_check(filter_opts: FilterOpts, base: Pattern, target: Pattern) {
-    let base = get_max_mtime(&filter_opts, vec![base]).expect("Nothing matched the base glob!");
-
-    let target =
-        get_max_mtime(&filter_opts, vec![target]).expect("Nothing matched the target glob!");
-
-    if base.modified_time() > target.modified_time() {
-        exit(0)
-    } else {
-        exit(1)
-    }
+    multi_check(filter_opts, &[base], &[target]);
 }
 
-pub fn multi_check(filter_opts: FilterOpts, bases: Vec<Pattern>, targets: Vec<Pattern>) {
-    let base = get_max_mtime(&filter_opts, bases).expect("Nothing matched the base globs!");
+/// Checks a slice of base globs against a slice of target globs.
+pub fn multi_check(filter_opts: FilterOpts, bases: &[Pattern], targets: &[Pattern]) {
+    let Some((_, base_mtime)) = get_max_mtime(&filter_opts, bases) else {
+        eprintln!("Nothing matched the base glob(s).");
+        ReturnCodes::NoEntityError.exit()
+    };
 
-    let target = get_max_mtime(&filter_opts, targets).expect("Nothing matched the target globs!");
+    let Some((_, target_mtime)) = get_max_mtime(&filter_opts, targets) else {
+        eprintln!("Nothing matched the target glob(s).");
+        ReturnCodes::NoEntityError.exit()
+    };
 
-    if base.modified_time() > target.modified_time() {
-        exit(0)
-    } else {
-        exit(1)
-    }
+    ReturnCodes::from(base_mtime > target_mtime).exit()
 }

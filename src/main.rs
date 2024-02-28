@@ -40,21 +40,23 @@ impl Commands {
 
         match args.command {
             Commands::SingleCheck { base, target } => {
-                commands::simple_check(filter_opts, base, target)
+                commands::simple_check(filter_opts, base, target);
             }
             Commands::MultiCheck { bases, targets } => {
-                commands::multi_check(filter_opts, bases, targets)
+                commands::multi_check(filter_opts, &bases, &targets);
             }
         }
     }
 }
 
-impl Into<config::FilterOpts> for &Cli {
-    fn into(self) -> config::FilterOpts {
-        config::FilterOpts {
-            include_files: !self.ignore_files,
-            include_dirs: !self.ignore_dirs,
-            symlinks: self.symlinks,
+/// This implementation allows ergonomic command-line representations of settings as _flags_ while
+/// preserving positive-biased conditionals in the code.
+impl From<&Cli> for config::FilterOpts {
+    fn from(value: &Cli) -> Self {
+        Self {
+            include_files: !value.ignore_files,
+            include_dirs: !value.ignore_dirs,
+            symlinks: value.symlinks,
         }
     }
 }
@@ -103,6 +105,5 @@ struct Cli {
 
 fn main() {
     let args = Cli::parse();
-    println!("{:?}", args);
     Commands::dispatch(args);
 }
